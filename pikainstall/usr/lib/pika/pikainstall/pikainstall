@@ -78,7 +78,7 @@ else:
 ## Boot UUID
 boot_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.boot, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 ## Print Boot
-boot_uuid = boot_uuid_command.stdout.readline().d rm -rfv "$1"/boot/*arch*ecode("utf-8").strip()
+boot_uuid = boot_uuid_command.stdout.readline().decode("utf-8").strip()
 print("\nBoot UUID: {}".format(boot_uuid))
 # Get EFI info
 ## EFI UUID
