@@ -29,7 +29,7 @@ then
 		echo "setting flag $3 to $4 on $2 ($PART_DEVICE)"
 		parted $PART_BLOCK set $PART_DEVICE_NUM $3 $4
 	fi
-elif [[ $1 == "encrypt" ]]
+elif [[ $1 == "encrypt-part" ]]
 then
 	if blkid -o value -s TYPE $(lsblk -sJp | jq -r --arg dsk "$(df -P -h -T "$2" | awk 'END{print $1}')" '.blockdevices | .[] | select(.name == $dsk) | .children | .[0] | .name') | grep -i luks > /dev/null 2>&1
 	then
@@ -37,7 +37,15 @@ then
 	else
 		echo "luks_none"
 	fi
+elif [[ $1 == "encrypt-uuid" ]]
+then
+	if blkid -o value -s TYPE $(lsblk -sJp | jq -r --arg dsk "$(df -P -h -T "$2" | awk 'END{print $1}')" '.blockdevices | .[] | select(.name == $dsk) | .children | .[0] | .name') | grep -i luks > /dev/null 2>&1
+	then
+		blkid "$(lsblk -sJp | jq -r --arg dsk "$(df -P -h -T "$2" | awk 'END{print $1}')" '.blockdevices | .[] | select(.name == $dsk) | .children | .[0] | .name')" -s UUID -o value
+	else
+		echo "luks_none"
+	fi
 else
-	echo "invalid first args not in: part, block, uuid" && exit 1
+	echo "invalid first args not in: part, block, uuid, encrypt-part, encrypt-uuid" && exit 1
 fi
 
