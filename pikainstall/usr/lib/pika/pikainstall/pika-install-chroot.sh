@@ -16,11 +16,11 @@ chmod +x /var/albius-refind_linux.sh
 refind-install
 apt install -y /var/cache/apt/archives/pika-refind-theme*.deb
 apt install -y /var/cache/apt/archives/booster*.deb
-locale-genlp
+locale-gen
 useradd -m -k -U pikaos
 echo pikaos:pikaos | sudo chpasswd
 usermod -a -G sudo pikaos
-usermod -a -G lpadmin pikaos
+usermod -a -G lpadmin pikaos || true
 mkdir -p /etc/gdm3
 echo '[daemon]\nAutomaticLogin=pikaos\nAutomaticLoginEnable=True' > /etc/gdm3/daemon.conf
 mkdir -p /home/pikaos/.config/dconf
