@@ -1,0 +1,18 @@
+#! /bin/python3
+
+import argparse
+import subprocess 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-r", "--root", help="The Path where root is mounted to.", metavar="/mnt/root", default=argparse.SUPPRESS, required=True, nargs=1)
+parser.add_argument("-b", "--boot", help="The Path where boot is mounted to.", metavar="/mnt/root/boot", default=argparse.SUPPRESS, required=True, nargs=1)
+parser.add_argument("-e", "--efi", help="The Path where EFI is mounted to.", metavar="/mnt/root/boot/efi", default=argparse.SUPPRESS, required=True, nargs=1)
+parser.add_argument("-H", "--home", help="The Path where home is mounted to.", metavar="/mnt/root/home", default=None, nargs=1)
+args = parser.parse_args()
+
+# Print all command-line arguments.
+print("Parsed arguments: {}".format(args))
+print(r)
+if args.home is not None:
+    print("good")
+    exit(1)
