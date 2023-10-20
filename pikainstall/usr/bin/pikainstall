@@ -35,10 +35,10 @@ args = parser.parse_args()
 print("\nParsed arguments: {}".format(args))
 # Get root info
 ## Root UUID
-root_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+root_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 root_uuid = root_uuid_command.stdout.readline().decode("utf-8").strip()
 ## Root Encryption Device
-root_encrypt_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt'] + args.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+root_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt'] + args.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 root_encrypt = root_encrypt_command.stdout.readline().decode("utf-8").strip()
 ## Print Root info
 print("\nRoot UUID: {}".format(root_uuid))  
@@ -48,23 +48,23 @@ else:
     print("Root Encryption Device: {}".format(root_encrypt))  
 # Get Boot info
 ## Boot UUID
-boot_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.boot, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+boot_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.boot, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 ## Print Boot
 boot_uuid = boot_uuid_command.stdout.readline().decode("utf-8").strip()
 print("\nBoot UUID: {}".format(boot_uuid))
 # Get EFI info
 ## EFI UUID
-efi_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.efi, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+efi_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.efi, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 efi_uuid = efi_uuid_command.stdout.readline().decode("utf-8").strip()
 ## Print EFI Info
 print("\nEFI UUID: {}".format(efi_uuid))
 # Get Home info is exists
 if args.home is not None:
     ## Home UUID
-    home_uuid_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    home_uuid_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_uuid = home_uuid_command.stdout.readline().decode("utf-8").strip()
     ## Encryption
-    home_encrypt_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    home_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_encrypt = home_encrypt_command.stdout.readline().decode("utf-8").strip()
     print("\nHome UUID: {}".format(home_uuid))  
     if home_encrypt == "luks_none":
@@ -100,6 +100,17 @@ elif args.home is not None:
         
 # With All Checks Clear and info gathered let's start installing
 
-# extract the squashfs image to root from casper
-squashfs_cmd = ['unsquashfs', '-f', '-d', listToString(args.home), image]
+## extract the squashfs image to root from casper
+squashfs_cmd = ['unsquashfs', '-f', '-d', listToString(args.root), image]
 subprocess.run(squashfs_cmd)
+
+## Enable bls_boot on EFI partiton
+efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.efi), 'bls_boot', 'on']
+subprocess.run(efi_flag_cmd)
+
+## Run pika-install-script
+bind_dev_cmd = ['/usr/lib/pika/pikainstall/pika-install-host.sh', listToString(args.root)]
+subprocess.run(bind_dev_cmd)
+
+print("System installed!")
+exit(0)
