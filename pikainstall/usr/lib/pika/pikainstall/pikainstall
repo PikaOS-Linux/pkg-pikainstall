@@ -6,7 +6,7 @@ import subprocess
 import os
 
 # Version
-version="1.0.1"
+version="1.0.2"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -136,8 +136,10 @@ CHROOT_PATH = listToString(args.root)
 
 # Write crypttab script if system has encryption
 if root_encrypt != "luks_none":
-    CRYPTTAB_ROOT_FILE_PATH = '/tmp/albius-crypttab-root.sh'
+    CRYPTTAB_ROOT_FILE_PATH = '/var/albius-crypttab-root.sh'
     CHROOT_CRYPTTAB_ROOT_FILE_PATH = os.path.join(CHROOT_PATH,CRYPTTAB_ROOT_FILE_PATH)
+    print("writing to:")
+    print(CHROOT_CRYPTTAB_ROOT_FILE_PATH)
     with open(CHROOT_CRYPTTAB_ROOT_FILE_PATH, "w") as file:
         albius_crypttab_root_file = _CRYPTTAB_ROOT_SETUP_FILE.format(
             ROOT_PART_UUID=root_uuid,
@@ -147,8 +149,10 @@ if root_encrypt != "luks_none":
 # Write crypttab script if system has encryption
 if args.home is not None:
     if home_encrypt != "luks_none":
-        CRYPTTAB_FILE_PATH = '/tmp/albius-crypttab.sh'
-        CHROOT_CRYPTTAB_FILE_PATH =os .path.join(CHROOT_PATH,CRYPTTAB_FILE_PATH)
+        CRYPTTAB_FILE_PATH = '/var/albius-crypttab.sh'
+        CHROOT_CRYPTTAB_FILE_PATH = os.path.join(CHROOT_PATH,CRYPTTAB_FILE_PATH)
+        print("writing to:")
+        print(CHROOT_CRYPTTAB_FILE_PATH)
         with open(CHROOT_CRYPTTAB_FILE_PATH, "w") as file:
             albius_crypttab_file = _CRYPTTAB_SETUP_FILE.format(
                 HOME_PART_UUID=home_uuid,
@@ -157,8 +161,10 @@ if args.home is not None:
             file.write(albius_crypttab_file)
 
 # Write refind script if system has encryption
-REFIND_FILE_PATH = '/tmp/albius-refind_linux.sh'
-CHROOT_REFIND_FILE_PATH=os.path.join(dir,file)
+REFIND_FILE_PATH = '/var/albius-refind_linux.sh'
+CHROOT_REFIND_FILE_PATH = os.path.join(CHROOT_PATH,REFIND_FILE_PATH)
+print("writing to:")
+print(CHROOT_REFIND_FILE_PATH)
 with open(CHROOT_REFIND_FILE_PATH, "w") as file:
     refind_crypttab_file = _REFIND_SETUP_FILE.format(
         ROOT_PART_UUID=root_uuid,

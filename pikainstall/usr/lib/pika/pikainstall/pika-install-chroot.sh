@@ -1,18 +1,18 @@
 #! /bin/bash
 apt remove casper -y
 apt autoremove -y
-if [ -f /tmp/albius-crypttab-root.sh ]
+if [ -f /var/albius-crypttab-root.sh ]
 then
-	chmod +x /tmp/albius-crypttab-root.sh
-	/tmp/albius-crypttab-root.sh
+	chmod +x /var/albius-crypttab-root.sh
+	/var/albius-crypttab-root.sh
 fi
-if [ -f /tmp/albius-crypttab.sh ]
+if [ -f /var/albius-crypttab.sh ]
 then
-	chmod +x /tmp/albius-crypttab.sh
-	/tmp/albius-crypttab.sh
+	chmod +x /var/albius-crypttab.sh
+	/var/albius-crypttab.sh
 fi
-chmod +x /tmp/albius-refind_linux.sh
-/tmp/albius-refind_linux.sh
+chmod +x /var/albius-refind_linux.sh
+/var/albius-refind_linux.sh
 refind-install
 apt install -y /var/cache/apt/archives/pika-refind-theme*.deb
 apt install -y /var/cache/apt/archives/booster*.deb
