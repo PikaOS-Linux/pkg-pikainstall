@@ -17,7 +17,8 @@ refind-install
 apt install -y /var/cache/apt/archives/pika-refind-theme*.deb
 apt install -y /var/cache/apt/archives/booster*.deb
 locale-genlp
-/usr/lib/pika/pikainstall/autoadder pikaos pikaos
+useradd -m -k -U pikaos
+echo pikaos:pikaos | sudo chpasswd
 usermod -a -G sudo pikaos
 usermod -a -G lpadmin pikaos
 mkdir -p /etc/gdm3
