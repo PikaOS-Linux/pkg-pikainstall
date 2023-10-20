@@ -4,6 +4,24 @@
 import argparse
 import subprocess 
 
+# Version
+version="1.0"
+dist="PikaOS 3"
+image="/cdrom/casper/filesystem.squashfs"
+
+# Print Program info
+print("pikainstall " + version + ": PikaOS terminal installer! for " + dist + ".")
+
+# Global Functions
+## List to string
+def listToString(s):
+    # initialize an empty string
+    str1 = ""
+    # traverse in the string
+    for ele in s:
+        str1 += ele
+    # return string
+    return str1
 
 # Setup Command line arguments
 parser = argparse.ArgumentParser()
@@ -14,36 +32,49 @@ parser.add_argument("-H", "--home", help="The Path where home is mounted to.", m
 args = parser.parse_args()
 
 # Print all command-line arguments.
-print("Parsed arguments: {}".format(args))
+print("\nParsed arguments: {}".format(args))
 # Get root info
+## Root UUID
 root_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 root_uuid = root_uuid_command.stdout.readline().decode("utf-8").strip()
+## Root Encryption Device
 root_encrypt_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt'] + args.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 root_encrypt = root_encrypt_command.stdout.readline().decode("utf-8").strip()
-print("Root UUID: {}".format(root_uuid))  
+## Print Root info
+print("\nRoot UUID: {}".format(root_uuid))  
 if root_encrypt == "luks_none":
     print("Root Encryption Device: Root is not encrypted!") 
 else:
     print("Root Encryption Device: {}".format(root_encrypt))  
-# Get boot info
+# Get Boot info
+## Boot UUID
 boot_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.boot, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+## Print Boot
 boot_uuid = boot_uuid_command.stdout.readline().decode("utf-8").strip()
-print("Boot UUID: {}".format(boot_uuid))
+print("\nBoot UUID: {}".format(boot_uuid))
 # Get EFI info
+## EFI UUID
 efi_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.efi, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 efi_uuid = efi_uuid_command.stdout.readline().decode("utf-8").strip()
-print("EFI UUID: {}".format(efi_uuid))
+## Print EFI Info
+print("\nEFI UUID: {}".format(efi_uuid))
 # Get Home info is exists
 if args.home is not None:
+    ## Home UUID
     home_uuid_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_uuid = home_uuid_command.stdout.readline().decode("utf-8").strip()
+    ## Encryption
     home_encrypt_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_encrypt = home_encrypt_command.stdout.readline().decode("utf-8").strip()
-    print("Home UUID: {}".format(home_uuid))  
+    print("\nHome UUID: {}".format(home_uuid))  
     if home_encrypt == "luks_none":
         print("Home Encryption Device: Home is not encrypted!") 
     else:
-        print("Home Encryption Device: {}".format(home_encrypt))  
+        print("Home Encryption Device: {}".format(home_encrypt))
+        ## Ask user for Home luks partition password for the key-filing process
+        print("\nPlease enter the LUKS password for the device" + home_encrypt + " :")
+        home_passwd = input("Warning: Do not enter this incorrectly or late installation will fail! ")
+    
     
 # Make sure to avoid any mounts pointing at the partition
 if root_uuid == boot_uuid:
@@ -65,3 +96,10 @@ elif args.home is not None:
     elif efi_uuid == home_uuid:
         print("Error: EFI and Home are mounted on the same drive, consider removing the -H/--home argument.")
         exit(1)
+        
+        
+# With All Checks Clear and info gathered let's start installing
+
+# extract the squashfs image to root from casper
+squashfs_cmd = ['unsquashfs', '-f', '-d', listToString(args.home), image]
+subprocess.run(squashfs_cmd)
