@@ -1,8 +1,11 @@
 #! /bin/python3
 
+# import libs
 import argparse
 import subprocess 
 
+
+# Setup Command line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--root", help="The Path where root is mounted to.", metavar="/mnt/root", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-b", "--boot", help="The Path where boot is mounted to.", metavar="/mnt/root/boot", default=argparse.SUPPRESS, required=True, nargs=1)
@@ -29,3 +32,24 @@ if args.home is not None:
     home_uuid_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_uuid = home_uuid_command.stdout.readline().decode("utf-8").strip()
     print("Home UUID: {}".format(home_uuid))  
+    
+# Make sure to avoid any mounts pointing at the partition
+if root_uuid == boot_uuid:
+    print("Error: Root and Boot are mounted on the same drive, please place boot on it's own partition.")
+    exit(1)
+elif root_uuid == efi_uuid:
+    print("Error: Root and EFI are mounted on the same drive, please place EFI on it's own partition.")
+    exit(1)
+elif boot_uuid == efi_uuid:
+    print("Error: Boot and EFI are mounted on the same drive, please place each on it's own partition.")
+    exit(1)
+elif args.home is not None:
+    if root_uuid == home_uuid:
+        print("Error: Root and Home are mounted on the same drive, consider removing the -H/--home argument.")
+        exit(1)
+    elif boot_uuid == home_uuid:
+        print("Error: Boot and Home are mounted on the same drive, consider removing the -H/--home argument.")
+        exit(1)
+    elif efi_uuid == home_uuid:
+        print("Error: EFI and Home are mounted on the same drive, consider removing the -H/--home argument.")
+        exit(1)
