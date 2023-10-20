@@ -1,6 +1,11 @@
 #! /bin/bash
 apt remove casper -y
 apt autoremove -y
+if [ -f /tmp/albius-crypttab-root.sh ]
+then
+	chmod +x /tmp/albius-crypttab-root.sh
+	/tmp/albius-crypttab-root.sh
+fi
 if [ -f /tmp/albius-crypttab.sh ]
 then
 	chmod +x /tmp/albius-crypttab.sh

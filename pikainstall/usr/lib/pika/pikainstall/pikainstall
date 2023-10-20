@@ -6,7 +6,7 @@ import subprocess
 import os
 
 # Version
-version="1.0"
+version="1.0.1"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -21,9 +21,13 @@ echo '"'Boot with logging'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID}
 echo '"'Boot with safe graphics'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} nomodeset ---'"'  >>  /boot/refind_linux.conf
 """
 
-_CRYPTTAB_SETUP_FILE = """#!/usr/bin/bash
+_CRYPTTAB_ROOT_SETUP_FILE = """#!/usr/bin/bash
 cat /etc/crypttab
 echo "crypt_root	UUID={ROOT_PART_UUID}	none	luks,discard" > /etc/crypttab
+"""
+
+_CRYPTTAB_SETUP_FILE = """#!/usr/bin/bash
+cat /etc/crypttab
 echo "crypt_home	UUID={HOME_PART_UUID}	/keyfile.txt    	luks" >> /etc/crypttab
 touch /keyfile.txt
 openssl genrsa > /keyfile.txt
@@ -131,16 +135,26 @@ subprocess.run(efi_flag_cmd)
 CHROOT_PATH = listToString(args.root)
 
 # Write crypttab script if system has encryption
-if home_encrypt == "luks_none":
-    CRYPTTAB_FILE_PATH = '/tmp/albius-crypttab.sh'
-    CHROOT_CRYPTTAB_FILE_PATH=os.path.join(dir,file)
-    with open(CHROOT_CRYPTTAB_FILE_PATH, "w") as file:
-        albius_crypttab_file = _CRYPTTAB_SETUP_FILE.format(
+if root_encrypt != "luks_none":
+    CRYPTTAB_ROOT_FILE_PATH = '/tmp/albius-crypttab-root.sh'
+    CHROOT_CRYPTTAB_ROOT_FILE_PATH = os.path.join(CHROOT_PATH,CRYPTTAB_ROOT_FILE_PATH)
+    with open(CHROOT_CRYPTTAB_ROOT_FILE_PATH, "w") as file:
+        albius_crypttab_root_file = _CRYPTTAB_ROOT_SETUP_FILE.format(
             ROOT_PART_UUID=root_uuid,
-            HOME_PART_UUID=home_uuid,
-            LUKS_PASSWD=home_passwd,
         )
-        file.write(albius_crypttab_file)
+        file.write(albius_crypttab_root_file)
+
+# Write crypttab script if system has encryption
+if args.home is not None:
+    if home_encrypt != "luks_none":
+        CRYPTTAB_FILE_PATH = '/tmp/albius-crypttab.sh'
+        CHROOT_CRYPTTAB_FILE_PATH =os .path.join(CHROOT_PATH,CRYPTTAB_FILE_PATH)
+        with open(CHROOT_CRYPTTAB_FILE_PATH, "w") as file:
+            albius_crypttab_file = _CRYPTTAB_SETUP_FILE.format(
+                HOME_PART_UUID=home_uuid,
+                LUKS_PASSWD=home_passwd,
+            )
+            file.write(albius_crypttab_file)
 
 # Write refind script if system has encryption
 REFIND_FILE_PATH = '/tmp/albius-refind_linux.sh'
