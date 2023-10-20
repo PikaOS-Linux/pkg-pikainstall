@@ -18,7 +18,13 @@ print("Parsed arguments: {}".format(args))
 # Get root info
 root_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 root_uuid = root_uuid_command.stdout.readline().decode("utf-8").strip()
-print("Root UUID: {}".format(root_uuid))
+root_encrypt_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt'] + args.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+root_encrypt = root_encrypt_command.stdout.readline().decode("utf-8").strip()
+print("Root UUID: {}".format(root_uuid))  
+if root_encrypt == "luks_none":
+    print("Root Encryption Device: Root is not encrypted!") 
+else:
+    print("Root Encryption Device: {}".format(root_encrypt))  
 # Get boot info
 boot_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.boot, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 boot_uuid = boot_uuid_command.stdout.readline().decode("utf-8").strip()
@@ -31,7 +37,13 @@ print("EFI UUID: {}".format(efi_uuid))
 if args.home is not None:
     home_uuid_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_uuid = home_uuid_command.stdout.readline().decode("utf-8").strip()
+    home_encrypt_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    home_encrypt = home_encrypt_command.stdout.readline().decode("utf-8").strip()
     print("Home UUID: {}".format(home_uuid))  
+    if home_encrypt == "luks_none":
+        print("Home Encryption Device: Home is not encrypted!") 
+    else:
+        print("Home Encryption Device: {}".format(home_encrypt))  
     
 # Make sure to avoid any mounts pointing at the partition
 if root_uuid == boot_uuid:
