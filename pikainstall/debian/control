@@ -1,0 +1,12 @@
+Source: pikainstall 
+Section: admin
+Priority: optional
+Maintainer: Ward Nakchbandi <hotrod.master@hotmail.com>
+Standards-Version: 4.6.1
+Build-Depends: debhelper-compat (= 13)
+Rules-Requires-Root: no
+
+Package: pikainstall
+Architecture: linux-any
+Depends: ${misc:Depends}, squashfs-tools
+Description: Command line installer for PikaOS
