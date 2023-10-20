@@ -14,9 +14,8 @@ then
 elif [[ "$1" == "uuid" ]]
 then
 	blkid "$(df -P -h -T "$2" | awk 'END{print $1}')" -s UUID -o value
-else
-	echo "invalid first args not in: part, block, uuid" && exit 1
 elif [[ $1 == "flag" ]]
+then
 	if [[ -z $3 ]]
 	then
 		echo "no flag specified" && exit 1
@@ -30,5 +29,15 @@ elif [[ $1 == "flag" ]]
 		echo "setting flag $3 to $4 on $2 ($PART_DEVICE)"
 		parted $PART_BLOCK set $PART_DEVICE_NUM $3 $4
 	fi
+elif [[ $1 == "encrypt" ]]
+then
+	if blkid -o value -s TYPE $(lsblk -sJp | jq -r --arg dsk "$(df -P -h -T "$2" | awk 'END{print $1}')" '.blockdevices | .[] | select(.name == $dsk) | .children | .[0] | .name') | grep -i luks > /dev/null 2>&1
+	then
+		lsblk -sJp | jq -r --arg dsk "$(df -P -h -T "$2" | awk 'END{print $1}')" '.blockdevices | .[] | select(.name == $dsk) | .children | .[0] | .name'
+	else
+		echo "luks_none"
+	fi
+else
+	echo "invalid first args not in: part, block, uuid" && exit 1
 fi
 
