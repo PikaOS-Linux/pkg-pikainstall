@@ -12,7 +12,20 @@ args = parser.parse_args()
 
 # Print all command-line arguments.
 print("Parsed arguments: {}".format(args))
-print(r)
+# Get root info
+root_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+root_uuid = root_uuid_command.stdout.readline().decode("utf-8").strip()
+print("Root UUID: {}".format(root_uuid))
+# Get boot info
+boot_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.boot, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+boot_uuid = boot_uuid_command.stdout.readline().decode("utf-8").strip()
+print("Boot UUID: {}".format(boot_uuid))
+# Get EFI info
+efi_uuid_command= subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.efi, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+efi_uuid = efi_uuid_command.stdout.readline().decode("utf-8").strip()
+print("EFI UUID: {}".format(efi_uuid))
+# Get Home info is exists
 if args.home is not None:
-    print("good")
-    exit(1)
+    home_uuid_command = subprocess.Popen(['/home/ward/pkgs/pikauwu/pkg-pikainstall/pikainstall/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    home_uuid = home_uuid_command.stdout.readline().decode("utf-8").strip()
+    print("Home UUID: {}".format(home_uuid))  
