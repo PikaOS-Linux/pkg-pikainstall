@@ -9,4 +9,5 @@
  mkdir -p "$1"/var/cache/apt/archives
  cp -rvf /cdrom/pool/main/* "$1"/var/cache/apt/archives/
  genfstab -U "$1" > "$1"/etc/fstab
+ cat "$1"/etc/fstab | grep -v zram > "$1"/etc/fstab
  chroot /chroot_dir /bin/bash -c "su - -c /usr/lib/pika/pikainstall/pika-install-chroot.sh"

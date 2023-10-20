@@ -8,5 +8,5 @@ Rules-Requires-Root: no
 
 Package: pikainstall
 Architecture: linux-any
-Depends: ${misc:Depends}, squashfs-tools
+Depends: ${misc:Depends}, squashfs-tools, arch-install-scripts
 Description: Command line installer for PikaOS
