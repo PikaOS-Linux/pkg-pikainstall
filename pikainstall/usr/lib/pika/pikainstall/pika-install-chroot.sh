@@ -22,7 +22,9 @@ echo pikaos:pikaos | sudo chpasswd
 usermod -a -G sudo pikaos
 usermod -a -G lpadmin pikaos || true
 mkdir -p /etc/gdm3
+mkdir -p /etc/sddm.conf.d/
 echo '[daemon]\nAutomaticLogin=pikaos\nAutomaticLoginEnable=True' > /etc/gdm3/daemon.conf
+echo '[Autologin]\nUser=pikaos\nSession=plasma' > /etc/sddm.conf.d/autologin.conf
 mkdir -p /home/pikaos/.config/dconf
 chmod 700 /home/pikaos/.config/dconf
 mkdir -p /var/lib/AccountsService/users
