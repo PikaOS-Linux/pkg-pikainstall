@@ -1,4 +1,6 @@
 #! /bin/bash
+touch /etc/fstab
+genfstab -U / | grep -v zram | grep -v portal | grep -v loop > /etc/fstab
 apt remove casper -y
 apt autoremove -y
 if [ -f /var/albius-crypttab-root.sh ]
