@@ -15,19 +15,19 @@ chmod +x /var/albius-refind_linux.sh
 /var/albius-refind_linux.sh
 refind-install
 apt install -y /var/cache/apt/archives/pika-refind-theme*.deb /var/cache/apt/archives/booster*.deb
-apt remove casper vanilla-installer -y
-apt autoremove -y
-locale-gen
-useradd -m -k -U pikaos
-echo pikaos:pikaos | sudo chpasswd
-usermod -a -G sudo pikaos
+apt remove casper vanilla-installer -y || true
+apt autoremove -y || true
+locale-gen || true
+useradd -m -k -U pikaos || true
+echo pikaos:pikaos | chpasswd || true
+usermod -a -G sudo pikaos || true
 usermod -a -G lpadmin pikaos || true
-mkdir -p /etc/gdm3
-mkdir -p /etc/sddm.conf.d/
-echo -e '[daemon]\nAutomaticLogin=pikaos\nAutomaticLoginEnable=True' >> /etc/gdm3/custom.conf
-echo -e '[Autologin]\nUser=pikaos\nSession=plasma' > /etc/sddm.conf.d/autologin.conf
-mkdir -p /home/pikaos
+mkdir -p /etc/gdm3 || true
+mkdir -p /etc/sddm.conf.d/ || true
+echo -e '[daemon]\nAutomaticLogin=pikaos\nAutomaticLoginEnable=True' >> /etc/gdm3/custom.conf || true
+echo -e '[Autologin]\nUser=pikaos\nSession=plasma' > /etc/sddm.conf.d/zautologin.conf || true
+mkdir -p /home/pikaos || true
 cp -rvf /etc/skel/.* /home/pikaos/ || true
-mkdir -p /home/pikaos/.config/autostart
-cp /usr/share/applications/pika-first-setup.desktop /home/pikaos/.config/autostart
-chown -R pikaos:pikaos /home/pikaos
+mkdir -p /home/pikaos/.config/autostart || true
+cp /usr/share/applications/pika-first-setup.desktop /home/pikaos/.config/autostart || true
+chown -R pikaos:pikaos /home/pikaos || true

@@ -13,4 +13,4 @@ genfstab -U "$1" > "$1"/etc/fstab
 cat "$1"/etc/fstab | grep -v zram > "$1"/etc/fstab
 mkdir -pv "$1"/usr/lib/pika/pikainstall/
 cp -rvf /usr/lib/pika/pikainstall/pika-install-chroot.sh "$1"/usr/lib/pika/pikainstall/
-chroot "$1" /bin/bash -c "su - -c /usr/lib/pika/pikainstall/pika-install-chroot.sh"
+chroot "$1" /bin/bash -c "/usr/lib/pika/pikainstall/pika-install-chroot.sh"
