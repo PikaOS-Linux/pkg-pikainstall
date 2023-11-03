@@ -19,7 +19,8 @@ then
 	/var/albius-crypttab.sh
 fi
 # Setup keyboard and locales
-
+chmod +x /var/albius-lang_linux.sh
+/var/albius-lang_linux.sh
 # Setup the refind bootloader
 chmod +x /var/albius-refind_linux.sh
 /var/albius-refind_linux.sh
