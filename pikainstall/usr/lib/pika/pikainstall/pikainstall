@@ -6,7 +6,7 @@ import subprocess
 import os
 
 # Version
-version="1.0.5"
+version="1.0.6"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -34,6 +34,17 @@ openssl genrsa > /keyfile.txt
 echo "{LUKS_PASSWD}" | cryptsetup luksAddKey UUID={HOME_PART_UUID}	/keyfile.txt -
 """
 
+_LANG_SETUP_FILE = """#!/usr/bin/bash
+update-locale LANG={LOCALE}
+touch /etc/default/keyboard
+echo 'XKBMODEL="pc105"' > /etc/default/keyboard
+echo 'XKBLAYOUT="{KEYBOARD}"' >> /etc/default/keyboard
+echo 'XKBVARIANT=""' >> /etc/default/keyboard
+echo 'XKBOPTIONS=""' >> /etc/default/keyboard
+echo 'BACKSPACE="guess"' >> /etc/default/keyboard
+echo 'KEYMAP={KEYBOARD}' >> /etc/default/keyboard
+cp -fv /etc/default/keyboard /etc/vconsole.conf
+"""
 
 # Global Functions
 ## List to string
@@ -49,6 +60,8 @@ def listToString(s):
 # Setup Command line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--root", help="The Path where root is mounted to.", metavar="/mnt/root", default=argparse.SUPPRESS, required=True, nargs=1)
+parser.add_argument("-l", "--locale", help="Choose what locale/language to use.", metavar="en_US.UTF-8", default=argparse.SUPPRESS, required=True, nargs=1)
+parser.add_argument("-k", "--keyboard", help="Choose what keyboard layout to use.", metavar="us", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-b", "--boot", help="The Path where boot is mounted to.", metavar="/mnt/root/boot", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-e", "--efi", help="The Path where EFI is mounted to.", metavar="/mnt/root/boot/efi", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-H", "--home", help="The Path where home is mounted to.", metavar="/mnt/root/home", default=None, nargs=1)
@@ -170,7 +183,20 @@ if args.home is not None:
             )
             file.write(albius_crypttab_file)
 
-# Write refind script if system has encryption
+
+# Write lang script
+LANG_FILE_PATH = '/var/albius-lang_linux.sh'
+CHROOT_LANG_FILE_PATH = CHROOT_PATH+LANG_FILE_PATH
+print("writing to:")
+print(CHROOT_LANG_FILE_PATH)
+with open(CHROOT_LANG_FILE_PATH, "w") as file:
+    lang_crypttab_file = _LANG_SETUP_FILE.format(
+        LOCALE=listToString(args.locale),
+        KEYBOARD=listToString(args.keyboard),
+    )
+    file.write(lang_crypttab_file)
+
+# Write refind script
 REFIND_FILE_PATH = '/var/albius-refind_linux.sh'
 CHROOT_REFIND_FILE_PATH = CHROOT_PATH+REFIND_FILE_PATH
 print("writing to:")

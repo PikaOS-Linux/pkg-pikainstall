@@ -1,8 +1,13 @@
 #! /bin/bash
+
+# Clear fstab
 touch /etc/fstab
+# Generate fstab entries
 genfstab -U / | grep -v zram | grep -v portal | grep -v loop | grep -v cdrom > /etc/fstab
+# Remove packages that are only needed for the live session
 apt remove casper -y
 apt autoremove -y
+# Setup Crypttab if needed
 if [ -f /var/albius-crypttab-root.sh ]
 then
 	chmod +x /var/albius-crypttab-root.sh
@@ -13,13 +18,19 @@ then
 	chmod +x /var/albius-crypttab.sh
 	/var/albius-crypttab.sh
 fi
+# Setup keyboard and locales
+
+# Setup the refind bootloader
 chmod +x /var/albius-refind_linux.sh
 /var/albius-refind_linux.sh
 refind-install
 apt install -y /var/cache/apt/archives/pika-refind-theme*.deb /var/cache/apt/archives/booster*.deb
+# Remove installer from installed system
 apt remove casper vanilla-installer -y || true
 apt autoremove -y || true
+# Generate locales
 locale-gen || true
+# Create first setup user
 useradd -m -k -U pikaos || true
 echo pikaos:pikaos | chpasswd || true
 usermod -a -G sudo pikaos || true
