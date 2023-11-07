@@ -18,6 +18,8 @@ then
 	chmod +x /var/albius-crypttab.sh
 	/var/albius-crypttab.sh
 fi
+# Generate locales
+locale-gen || true
 # Setup keyboard and locales
 chmod +x /var/albius-lang_linux.sh
 /var/albius-lang_linux.sh
@@ -29,8 +31,6 @@ apt install -y /var/cache/apt/archives/pika-refind-theme*.deb /var/cache/apt/arc
 # Remove installer from installed system
 apt remove casper vanilla-installer -y || true
 apt autoremove -y || true
-# Generate locales
-locale-gen || true
 # Create first setup user
 useradd -m -k -U pikaos || true
 echo pikaos:pikaos | chpasswd || true
