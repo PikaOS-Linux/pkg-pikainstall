@@ -151,10 +151,13 @@ elif args.home is not None:
 squashfs_cmd = ['unsquashfs', '-f', '-d', listToString(args.root), image]
 subprocess.run(squashfs_cmd)
 
-## Enable bls_boot on EFI partiton
-efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.efi), 'bls_boot', 'on']
-subprocess.run(efi_flag_cmd)
+## Enable bls_boot on boot partiton
+boot_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.boot), 'bls_boot', 'on']
+subprocess.run(boot_flag_cmd)
 
+## Enable esp on EFI partiton
+efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.efi), 'esp', 'on']
+subprocess.run(efi_flag_cmd)
 
 CHROOT_PATH = listToString(args.root)
 
