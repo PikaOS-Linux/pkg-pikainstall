@@ -145,38 +145,37 @@ elif args.home is not None:
         print("Error: EFI and Home are mounted on the same drive, consider removing the -H/--home argument.")
         exit(1)
 # Make sure mountpoints are not /dev prefixes
-if args.root.startswith('/dev'):
+if args.root[0].startswith('/dev'):
     print("Error: Root mount point is pointed a device, please use a mountpoint.")
     exit(1)
-if args.boot.startswith('/dev'):
+if args.boot[0].startswith('/dev'):
     print("Error: Boot mount point is pointed a device, please use a mountpoint.")
     exit(1)
-if args.efi.startswith('/dev'):
+if args.efi[0].startswith('/dev'):
     print("Error: EFI mount point is pointed a device, please use a mountpoint.")
     exit(1)
 if args.home is not None:
-    if args.home.startswith('/dev'):
+    if args.home[0].startswith('/dev'):
         print("Error: Home mount point is pointed a device, please use a mountpoint.")
         exit(1)
 # Make sure All mounts are releative to chroot
-if boot.startswith(args.root):
+if args.boot[0].startswith(args.root[0]):
     print("Boot Partition Check: OK!")
 else:
         print("Error: Boot mount point is not relative to chroot, please mount it some inside the chroot and supply the new mountpoint!")
         exit(1)
-if efi.startswith(args.root):
+if args.efi[0].startswith(args.root[0]):
     print("EFI Partition Check: OK!")
 else:
         print("Error: EFI mount point is not relative to chroot, please mount it some inside the chroot and supply the new mountpoint!")
         exit(1)
 if args.home is not None:
-    if boot.startswith(args.root):
+    if args.home[0].startswith(args.root[0]):
             print("Home Partition Check: OK!")
     else:
             print("Error: Home mount point is not relative to chroot, please mount it some inside the chroot and supply the new mountpoint!")
             exit(1)
-        
-        
+
 # With All Checks Clear and info gathered let's start installing
 
 ## extract the squashfs image to root from casper
