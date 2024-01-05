@@ -29,8 +29,8 @@ chmod +x /var/albius-refind_linux.sh
 refind-install
 apt install -y /var/cache/apt/archives/pika-refind-theme*.deb /var/cache/apt/archives/booster*.deb
 # EFI workaround for MSI
-mkdir -p /boot/EFI/BOOT
-cp -vf  /boot/EFI/refind/refind_x64.efi /boot/EFI/BOOT/BOOTX64.EFI
+mkdir -p /boot/efi/EFI/BOOT
+cp -vf  /boot/efi/EFI/refind/refind_x64.efi /boot/efi/EFI/BOOT/BOOTX64.EFI
 # Remove installer from installed system
 apt remove casper vanilla-installer -y || true
 apt autoremove -y || true
