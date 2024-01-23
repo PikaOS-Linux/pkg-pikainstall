@@ -6,7 +6,7 @@ import subprocess
 import os
 
 # Version
-version="1.0.7"
+version="1.0.8"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -45,6 +45,7 @@ echo 'BACKSPACE="guess"' >> /etc/default/keyboard
 echo 'KEYMAP={KEYBOARD}' >> /etc/default/keyboard
 cp -fv /etc/default/keyboard /etc/vconsole.conf
 echo LC_ALL={LOCALE} >> /etc/environment
+timedatectl set-timezone {TIMEZONE}
 """
 
 # Global Functions
@@ -66,6 +67,7 @@ parser.add_argument("-k", "--keyboard", help="Choose what keyboard layout to use
 parser.add_argument("-b", "--boot", help="The Path where boot is mounted to.", metavar="/mnt/root/boot", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-e", "--efi", help="The Path where EFI is mounted to.", metavar="/mnt/root/boot/efi", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-H", "--home", help="The Path where home is mounted to.", metavar="/mnt/root/home", default=None, nargs=1)
+parser.add_argument("-t", "--timezone", help="Choose what timezone to use.", metavar="America/New_York", default=argparse.SUPPRESS, required=True, nargs=1)
 args = parser.parse_args()
 
 # Print all command-line arguments.
@@ -181,19 +183,23 @@ elif args.home is not None:
 ## extract the squashfs image to root from casper
 squashfs_cmd = ['unsquashfs', '-f', '-d', listToString(args.root), image]
 subprocess.run(squashfs_cmd)
+subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-parting.txt'])
 
 ## Enable bls_boot on boot partiton
 boot_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.boot), 'bls_boot', 'on']
 subprocess.run(boot_flag_cmd)
+subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag1.txt'])
 
 ## Enable esp on EFI partiton
 efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.efi), 'esp', 'on']
 subprocess.run(efi_flag_cmd)
+subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag2.txt'])
 
 CHROOT_PATH = listToString(args.root)
 
 # Write crypttab script if system has encryption
 if root_part_encrypt != "luks_none":
+    subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-crypt.txt'])
     CRYPTTAB_ROOT_FILE_PATH = '/var/albius-crypttab-root.sh'
     CHROOT_CRYPTTAB_ROOT_FILE_PATH = CHROOT_PATH+CRYPTTAB_ROOT_FILE_PATH
     print("writing to:")
@@ -225,13 +231,16 @@ CHROOT_LANG_FILE_PATH = CHROOT_PATH+LANG_FILE_PATH
 print("writing to:")
 print(CHROOT_LANG_FILE_PATH)
 with open(CHROOT_LANG_FILE_PATH, "w") as file:
+    subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-lang.txt'])
     lang_crypttab_file = _LANG_SETUP_FILE.format(
         LOCALE=listToString(args.locale),
         KEYBOARD=listToString(args.keyboard),
+        TIMEZONE=listToString(args.timezone),
     )
     file.write(lang_crypttab_file)
 
 # Write refind script
+subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-boot.txt'])
 REFIND_FILE_PATH = '/var/albius-refind_linux.sh'
 CHROOT_REFIND_FILE_PATH = CHROOT_PATH+REFIND_FILE_PATH
 print("writing to:")
@@ -244,6 +253,7 @@ with open(CHROOT_REFIND_FILE_PATH, "w") as file:
     
 
 ## Run pika-install-script
+subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-post.txt'])
 bind_dev_cmd = ['/usr/lib/pika/pikainstall/pika-install-host.sh', listToString(args.root)]
 subprocess.run(bind_dev_cmd)
 
