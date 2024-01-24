@@ -206,7 +206,7 @@ if root_part_encrypt != "luks_none":
         file.write(albius_crypttab_root_file)
 
 # Write crypttab script if system has encryption
-if CHROOT_PATH + "/home" is not None:
+if root_uuid != home_uuid:
     if home_part_encrypt != "luks_none":
         subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-crypt.txt'])
         CRYPTTAB_FILE_PATH = '/var/albius-crypttab.sh'
