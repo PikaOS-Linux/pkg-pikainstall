@@ -6,7 +6,7 @@ import subprocess
 import os
 
 # Version
-version="1.1.3"
+version="1.1.4"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -163,12 +163,12 @@ subprocess.run(squashfs_cmd)
 
 ## Enable bls_boot on boot partiton
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag1.txt'])
-boot_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', CHROOT_PATH, '/boot', 'bls_boot', 'on']
+boot_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', CHROOT_PATH + '/boot', 'bls_boot', 'on']
 subprocess.run(boot_flag_cmd)
 
 ## Enable esp on EFI partiton
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag2.txt'])
-efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', CHROOT_PATH, '/boot/efi', 'esp', 'on']
+efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', CHROOT_PATH + '/boot/efi', 'esp', 'on']
 subprocess.run(efi_flag_cmd)
 
 # Write crypttab script if system has encryption
