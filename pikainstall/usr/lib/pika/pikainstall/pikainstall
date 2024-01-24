@@ -19,27 +19,6 @@ touch /boot/refind_linux.conf
 echo '"'Boot with standard options'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} quiet splash ---'"'  > /boot/refind_linux.conf
 echo '"'Boot with logging'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} ---'"'  >>  /boot/refind_linux.conf
 echo '"'Boot with safe graphics'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} nomodeset ---'"'  >>  /boot/refind_linux.conf
-"""#! /bin/python3
-
-# import libs
-import argparse
-import subprocess
-import os
-
-# Version
-version="1.1.1"
-dist="PikaOS 3"
-image="/cdrom/casper/filesystem.squashfs"
-
-# Print Program info
-print("pikainstall " + version + ": PikaOS terminal installer! for " + dist + ".")
-
-### text files
-_REFIND_SETUP_FILE = """#!/usr/bin/bash
-touch /boot/refind_linux.conf
-echo '"'Boot with standard options'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} quiet splash ---'"'  > /boot/refind_linux.conf
-echo '"'Boot with logging'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} ---'"'  >>  /boot/refind_linux.conf
-echo '"'Boot with safe graphics'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} nomodeset ---'"'  >>  /boot/refind_linux.conf
 """
 
 _CRYPTTAB_ROOT_SETUP_FILE = """#!/usr/bin/bash
