@@ -6,7 +6,7 @@ import subprocess
 import os
 
 # Version
-version="1.1.2"
+version="1.1.3"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -157,19 +157,19 @@ elif root_uuid != home_uuid:
 # With All Checks Clear and info gathered let's start installing
 
 ## extract the squashfs image to root from casper
+subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-image.txt'])
 squashfs_cmd = ['unsquashfs', '-f', '-d', CHROOT_PATH, image]
 subprocess.run(squashfs_cmd)
-subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-image.txt'])
 
 ## Enable bls_boot on boot partiton
+subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag1.txt'])
 boot_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', CHROOT_PATH, '/boot', 'bls_boot', 'on']
 subprocess.run(boot_flag_cmd)
-subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag1.txt'])
 
 ## Enable esp on EFI partiton
+subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag2.txt'])
 efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', CHROOT_PATH, '/boot/efi', 'esp', 'on']
 subprocess.run(efi_flag_cmd)
-subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag2.txt'])
 
 # Write crypttab script if system has encryption
 if root_part_encrypt != "luks_none":
