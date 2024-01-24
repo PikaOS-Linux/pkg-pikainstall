@@ -6,7 +6,7 @@ import subprocess
 import os
 
 # Version
-version="1.1.0"
+version="1.1.1"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -90,28 +90,28 @@ else:
     print("Root Encryption UUID: {}".format(root_uuid_encrypt))
 # Get Boot info
 ## Boot UUID
-boot_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root + "/boot" , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+boot_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root[0] + "/boot" , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 ## Print Boot
 boot_uuid = boot_uuid_command.stdout.readline().decode("utf-8").strip()
 print("\nBoot UUID: {}".format(boot_uuid))
 # Get EFI info
 ## EFI UUID
-efi_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root + "/boot/efi", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+efi_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root[0] + "/boot/efi", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 efi_uuid = efi_uuid_command.stdout.readline().decode("utf-8").strip()
 ## Print EFI Info
 print("\nEFI UUID: {}".format(efi_uuid))
 
 ## Home UUID
-home_uuid_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root + "/home", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+home_uuid_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root[0] + "/home", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 home_uuid = home_uuid_command.stdout.readline().decode("utf-8").strip()
 
 # Get Home info is exists
 if root_uuid != home_uuid:
     ## Home Encryption Partition
-    home_part_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-part'] + args.root + "/home", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    home_part_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-part'] + args.root[0] + "/home", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_part_encrypt = home_part_encrypt_command.stdout.readline().decode("utf-8").strip()
     ## Home Encryption UUID
-    home_uuid_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-uuid'] + args.root + "/home", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    home_uuid_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-uuid'] + args.root[0] + "/home", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_uuid_encrypt = home_uuid_encrypt_command.stdout.readline().decode("utf-8").strip()
     print("\nHome UUID: {}".format(home_uuid))
     if home_part_encrypt == "luks_none":
@@ -155,21 +155,21 @@ elif root_uuid != home_uuid:
 # With All Checks Clear and info gathered let's start installing
 
 ## extract the squashfs image to root from casper
-squashfs_cmd = ['unsquashfs', '-f', '-d', listToString(args.root), image]
+squashfs_cmd = ['unsquashfs', '-f', '-d', listToString(args.root[0]), image]
 subprocess.run(squashfs_cmd)
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-image.txt'])
 
 ## Enable bls_boot on boot partiton
-boot_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.root + "/boot" ), 'bls_boot', 'on']
+boot_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.root[0] + "/boot" ), 'bls_boot', 'on']
 subprocess.run(boot_flag_cmd)
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag1.txt'])
 
 ## Enable esp on EFI partiton
-efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.root + "/boot/efi"), 'esp', 'on']
+efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.root[0] + "/boot/efi"), 'esp', 'on']
 subprocess.run(efi_flag_cmd)
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag2.txt'])
 
-CHROOT_PATH = listToString(args.root)
+CHROOT_PATH = listToString(args.root[0])
 
 # Write crypttab script if system has encryption
 if root_part_encrypt != "luks_none":
@@ -185,7 +185,7 @@ if root_part_encrypt != "luks_none":
         file.write(albius_crypttab_root_file)
 
 # Write crypttab script if system has encryption
-if args.root + "/home" is not None:
+if args.root[0] + "/home" is not None:
     if home_part_encrypt != "luks_none":
         subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-crypt.txt'])
         CRYPTTAB_FILE_PATH = '/var/albius-crypttab.sh'
@@ -229,7 +229,7 @@ with open(CHROOT_REFIND_FILE_PATH, "w") as file:
 
 ## Run pika-install-script
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-post.txt'])
-bind_dev_cmd = ['/usr/lib/pika/pikainstall/pika-install-host.sh', listToString(args.root)]
+bind_dev_cmd = ['/usr/lib/pika/pikainstall/pika-install-host.sh', listToString(args.root[0])]
 subprocess.run(bind_dev_cmd)
 
 print("System installed!")
