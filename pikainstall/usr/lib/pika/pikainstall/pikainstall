@@ -6,7 +6,7 @@ import subprocess
 import os
 
 # Version
-version="1.0.8"
+version="1.1.0"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -64,9 +64,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--root", help="The Path where root is mounted to.", metavar="/mnt/root", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-l", "--locale", help="Choose what locale/language to use.", metavar="en_US.UTF-8", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-k", "--keyboard", help="Choose what keyboard layout to use.", metavar="us", default=argparse.SUPPRESS, required=True, nargs=1)
-parser.add_argument("-b", "--boot", help="The Path where boot is mounted to.", metavar="/mnt/root/boot", default=argparse.SUPPRESS, required=True, nargs=1)
-parser.add_argument("-e", "--efi", help="The Path where EFI is mounted to.", metavar="/mnt/root/boot/efi", default=argparse.SUPPRESS, required=True, nargs=1)
-parser.add_argument("-H", "--home", help="The Path where home is mounted to.", metavar="/mnt/root/home", default=None, nargs=1)
+parser.add_argument("-c", "--cryptkey", help="Luks passkey to /home.", metavar="password123", default=None, nargs=1)
 parser.add_argument("-t", "--timezone", help="Choose what timezone to use.", metavar="America/New_York", default=argparse.SUPPRESS, required=True, nargs=1)
 args = parser.parse_args()
 
@@ -92,26 +90,28 @@ else:
     print("Root Encryption UUID: {}".format(root_uuid_encrypt))
 # Get Boot info
 ## Boot UUID
-boot_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.boot, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+boot_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root + "/boot" , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 ## Print Boot
 boot_uuid = boot_uuid_command.stdout.readline().decode("utf-8").strip()
 print("\nBoot UUID: {}".format(boot_uuid))
 # Get EFI info
 ## EFI UUID
-efi_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.efi, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+efi_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root + "/boot/efi", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 efi_uuid = efi_uuid_command.stdout.readline().decode("utf-8").strip()
 ## Print EFI Info
 print("\nEFI UUID: {}".format(efi_uuid))
+
+## Home UUID
+home_uuid_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.root + "/home", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+home_uuid = home_uuid_command.stdout.readline().decode("utf-8").strip()
+
 # Get Home info is exists
-if args.home is not None:
-    ## Home UUID
-    home_uuid_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    home_uuid = home_uuid_command.stdout.readline().decode("utf-8").strip()
+if root_uuid != home_uuid:
     ## Home Encryption Partition
-    home_part_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-part'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    home_part_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-part'] + args.root + "/home", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_part_encrypt = home_part_encrypt_command.stdout.readline().decode("utf-8").strip()
     ## Home Encryption UUID
-    home_uuid_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-uuid'] + args.home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    home_uuid_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-uuid'] + args.root + "/home", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_uuid_encrypt = home_uuid_encrypt_command.stdout.readline().decode("utf-8").strip()
     print("\nHome UUID: {}".format(home_uuid))
     if home_part_encrypt == "luks_none":
@@ -120,58 +120,32 @@ if args.home is not None:
     else:
         print("Home Encryption Partition: {}".format(home_part_encrypt))
         print("Home Encryption UUID: {}".format(home_uuid_encrypt))
-        ## Ask user for Home luks partition password for the key-filing process
-        print("\nPlease enter the LUKS password for the device" + home_part_encrypt + " :")
-        home_passwd = input("Warning: Do not enter this incorrectly or late installation will fail! ")
+        if args.cryptkey is not None:
+            home_passwd = args.cryptkey
+        else:
+            ## Ask user for Home luks partition password for the key-filing process
+            print("\nPlease enter the LUKS password for the device" + home_part_encrypt + " :")
+            home_passwd = input("Warning: Do not enter this incorrectly or late installation will fail! ")
 
 
 # Checks
 # Make sure mountpoints are not /dev prefixes
 if args.root[0].startswith('/dev'):
-    print("Error: Root mount point is pointed a device, please use a mountpoint.")
+    print("Error: mountpoint is pointed a device, please use a mountpoint.")
     exit(1)
-if args.boot[0].startswith('/dev'):
-    print("Error: Boot mount point is pointed a device, please use a mountpoint.")
-    exit(1)
-if args.efi[0].startswith('/dev'):
-    print("Error: EFI mount point is pointed a device, please use a mountpoint.")
-    exit(1)
-if args.home is not None:
-    if args.home[0].startswith('/dev'):
-        print("Error: Home mount point is pointed a device, please use a mountpoint.")
-        exit(1)
-# Make sure All mounts are in the correct place releative to chroot
-if args.boot[0] == f"{args.root[0]}/boot":
-    print("Boot Partition Check: OK!")
-else:
-        print(f"Error: Boot mount point is not in a correct place relative to chroot, please mount it in {args.root[0]}/boot and supply the new mountpoint!")
-        exit(1)
-if args.efi[0]  == f"{args.root[0]}/boot/efi":
-    print("EFI Partition Check: OK!")
-else:
-        print(f"Error: EFI mount point is not in a correct place relative to chroot, please mount it in {args.root[0]}/boot/efi and supply the new mountpoint!")
-        exit(1)
-if args.home is not None:
-    if args.home[0] == f"{args.root[0]}/home":
-            print("Home Partition Check: OK!")
-    else:
-            print(f"Error: Home mount point is not in a correct place relative to chroot, please mount it in {args.root[0]}/home and supply the new mountpoint!")
-            exit(1)
-# Make sure to avoid any mounts pointing at the same partition
+# Make sure to have all mounts pointing at the same partition
 if root_uuid == boot_uuid:
-    print("Error: Root and Boot are mounted on the same drive, please place boot on it's own partition.")
+    print("Error: Boot partition not found in chroot.")
     exit(1)
 elif root_uuid == efi_uuid:
-    print("Error: Root and EFI are mounted on the same drive, please place EFI on it's own partition.")
+    print("Error: EFI partition not found in chroot.")
     exit(1)
+# Make sure to avoid any mounts pointing at the same partition
 elif boot_uuid == efi_uuid:
     print("Error: Boot and EFI are mounted on the same drive, please place each on it's own partition.")
     exit(1)
-elif args.home is not None:
-    if root_uuid == home_uuid:
-        print("Error: Root and Home are mounted on the same drive, consider removing the -H/--home argument.")
-        exit(1)
-    elif boot_uuid == home_uuid:
+elif root_uuid != home_uuid:
+    if boot_uuid == home_uuid:
         print("Error: Boot and Home are mounted on the same drive, consider removing the -H/--home argument.")
         exit(1)
     elif efi_uuid == home_uuid:
@@ -183,15 +157,15 @@ elif args.home is not None:
 ## extract the squashfs image to root from casper
 squashfs_cmd = ['unsquashfs', '-f', '-d', listToString(args.root), image]
 subprocess.run(squashfs_cmd)
-subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-parting.txt'])
+subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-image.txt'])
 
 ## Enable bls_boot on boot partiton
-boot_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.boot), 'bls_boot', 'on']
+boot_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.root + "/boot" ), 'bls_boot', 'on']
 subprocess.run(boot_flag_cmd)
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag1.txt'])
 
 ## Enable esp on EFI partiton
-efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.efi), 'esp', 'on']
+efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', listToString(args.root + "/boot/efi"), 'esp', 'on']
 subprocess.run(efi_flag_cmd)
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag2.txt'])
 
@@ -211,8 +185,9 @@ if root_part_encrypt != "luks_none":
         file.write(albius_crypttab_root_file)
 
 # Write crypttab script if system has encryption
-if args.home is not None:
+if args.root + "/home" is not None:
     if home_part_encrypt != "luks_none":
+        subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-crypt.txt'])
         CRYPTTAB_FILE_PATH = '/var/albius-crypttab.sh'
         CHROOT_CRYPTTAB_FILE_PATH = CHROOT_PATH+CRYPTTAB_FILE_PATH
         print("writing to:")
