@@ -16,9 +16,16 @@ print("pikainstall " + version + ": PikaOS terminal installer! for " + dist + ".
 ### text files
 _REFIND_SETUP_FILE = """#!/usr/bin/bash
 touch /boot/refind_linux.conf
-echo '"'Boot with standard options'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} quiet splash ---'"'  > /boot/refind_linux.conf
-echo '"'Boot with logging'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} ---'"'  >>  /boot/refind_linux.conf
-echo '"'Boot with safe graphics'"'  '"'nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} nomodeset ---'"'  >>  /boot/refind_linux.conf
+echo '"'Boot with standard options'"'  '"'amd_pstate=active nowatchdog amd_prefcore=enable nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} quiet splash ---'"'  > /boot/refind_linux.conf
+echo '"'Boot with logging'"'  '"'amd_pstate=active nowatchdog amd_prefcore=enable nvidia-drm.modeset=1 root=UUID={ROOT_PART_UUID} ---'"'  >>  /boot/refind_linux.conf
+echo '"'Boot with safe graphics'"'  '"'amd_pstate=active nowatchdog amd_prefcore=enable root=UUID={ROOT_PART_UUID} nomodeset ---'"'  >>  /boot/refind_linux.conf
+"""
+
+_REFIND_CRYPT_SETUP_FILE = """#!/usr/bin/bash
+touch /boot/refind_linux.conf
+echo '"'Boot with standard options'"'  '"'rd.luks.name={ROOT_CRYPT_UUID}=crypt_root amd_pstate=active nowatchdog amd_prefcore=enable nvidia-drm.modeset=1 root=/dev/mapper/crypt_root quiet splash ---'"'  > /boot/refind_linux.conf
+echo '"'Boot with logging'"'  '"'rd.luks.name={ROOT_CRYPT_UUID}=crypt_root amd_pstate=active nowatchdog amd_prefcore=enable nvidia-drm.modeset=1 root=/dev/mapper/crypt_root ---'"'  >>  /boot/refind_linux.conf
+echo '"'Boot with safe graphics'"'  '"'rd.luks.name={ROOT_CRYPT_UUID}=crypt_root amd_pstate=active nowatchdog amd_prefcore=enable root=/dev/mapper/crypt_root nomodeset ---'"'  >>  /boot/refind_linux.conf
 """
 
 _CRYPTTAB_ROOT_SETUP_FILE = """#!/usr/bin/bash
@@ -215,16 +222,29 @@ with open(CHROOT_LANG_FILE_PATH, "w") as file:
     file.write(lang_crypttab_file)
 
 # Write refind script
-subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-boot.txt'])
-REFIND_FILE_PATH = '/var/albius-refind_linux.sh'
-CHROOT_REFIND_FILE_PATH = CHROOT_PATH+REFIND_FILE_PATH
-print("writing to:")
-print(CHROOT_REFIND_FILE_PATH)
-with open(CHROOT_REFIND_FILE_PATH, "w") as file:
-    refind_crypttab_file = _REFIND_SETUP_FILE.format(
-        ROOT_PART_UUID=root_uuid,
-    )
-    file.write(refind_crypttab_file)
+
+if root_part_encrypt == "luks_none":
+    subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-boot.txt'])
+    REFIND_FILE_PATH = '/var/albius-refind_linux.sh'
+    CHROOT_REFIND_FILE_PATH = CHROOT_PATH+REFIND_FILE_PATH
+    print("writing to:")
+    print(CHROOT_REFIND_FILE_PATH)
+    with open(CHROOT_REFIND_FILE_PATH, "w") as file:
+        refind_crypttab_file = _REFIND_SETUP_FILE.format(
+            ROOT_PART_UUID=root_uuid,
+        )
+        file.write(refind_crypttab_file)
+else:
+    subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-boot.txt'])
+    REFIND_FILE_PATH = '/var/albius-refind_linux.sh'
+    CHROOT_REFIND_FILE_PATH = CHROOT_PATH+REFIND_FILE_PATH
+    print("writing to:")
+    print(CHROOT_REFIND_FILE_PATH)
+    with open(CHROOT_REFIND_FILE_PATH, "w") as file:
+        refind_crypttab_file = _REFIND_CRYPT_SETUP_FILE.format(
+            ROOT_CRYPT_UUID=root_uuid_encrypt,
+        )
+        file.write(refind_crypttab_file)
     
 
 ## Run pika-install-script
