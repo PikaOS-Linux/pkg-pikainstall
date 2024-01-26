@@ -213,7 +213,7 @@ if root_uuid != home_uuid:
         with open(CHROOT_CRYPTTAB_FILE_PATH, "w") as file:
             albius_crypttab_file = _CRYPTTAB_SETUP_FILE.format(
                 HOME_PART_UUID=home_uuid_encrypt,
-                ROOT_ENCRYPT_NAME=home_name_encrypt,
+                HOME_ENCRYPT_NAME=home_name_encrypt,
                 LUKS_PASSWD=home_passwd,
             )
             file.write(albius_crypttab_file)

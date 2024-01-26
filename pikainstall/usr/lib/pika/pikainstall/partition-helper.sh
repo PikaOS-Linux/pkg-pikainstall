@@ -45,7 +45,6 @@ then
 	else
 		echo "luks_none"
 	fi
-else
 elif [[ $1 == "encrypt-name" ]]
 then
 	if blkid -o value -s TYPE $(lsblk -sJp | jq -r --arg dsk "$(df -P -h -T "$2" | awk 'END{print $1}')" '.blockdevices | .[] | select(.name == $dsk) | .children | .[0] | .name') | grep -i luks > /dev/null 2>&1
