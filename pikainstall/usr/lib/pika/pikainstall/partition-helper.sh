@@ -46,6 +46,15 @@ then
 		echo "luks_none"
 	fi
 else
-	echo "invalid first args not in: part, block, uuid, encrypt-part, encrypt-uuid" && exit 1
+elif [[ $1 == "encrypt-name" ]]
+then
+	if blkid -o value -s TYPE $(lsblk -sJp | jq -r --arg dsk "$(df -P -h -T "$2" | awk 'END{print $1}')" '.blockdevices | .[] | select(.name == $dsk) | .children | .[0] | .name') | grep -i luks > /dev/null 2>&1
+	then
+		 df -P -h -T "$2" | awk 'END{print $1}' | awk -F '/dev/mapper/' '{print $2}'
+	else
+		echo "luks_none"
+	fi
+else
+	echo "invalid first args not in: part, block, uuid, encrypt-part, encrypt-uuid, encrypt-name" && exit 1
 fi
 

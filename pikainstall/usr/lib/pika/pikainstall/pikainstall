@@ -6,7 +6,7 @@ import subprocess
 import os
 
 # Version
-version="1.1.4"
+version="1.1.5"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -23,18 +23,18 @@ echo '"'Boot with safe graphics'"'  '"'amd_pstate=active nowatchdog amd_prefcore
 
 _REFIND_CRYPT_SETUP_FILE = """#!/usr/bin/bash
 touch /boot/refind_linux.conf
-echo '"'Boot with standard options'"'  '"'rd.luks.name={ROOT_CRYPT_UUID}=crypt_root amd_pstate=active nowatchdog amd_prefcore=enable nvidia-drm.modeset=1 root=/dev/mapper/crypt_root quiet splash ---'"'  > /boot/refind_linux.conf
-echo '"'Boot with logging'"'  '"'rd.luks.name={ROOT_CRYPT_UUID}=crypt_root amd_pstate=active nowatchdog amd_prefcore=enable nvidia-drm.modeset=1 root=/dev/mapper/crypt_root ---'"'  >>  /boot/refind_linux.conf
-echo '"'Boot with safe graphics'"'  '"'rd.luks.name={ROOT_CRYPT_UUID}=crypt_root amd_pstate=active nowatchdog amd_prefcore=enable root=/dev/mapper/crypt_root nomodeset ---'"'  >>  /boot/refind_linux.conf
+echo '"'Boot with standard options'"'  '"'rd.luks.name={ROOT_CRYPT_UUID}={ROOT_ENCRYPT_NAME} amd_pstate=active nowatchdog amd_prefcore=enable nvidia-drm.modeset=1 root=/dev/mapper/{ROOT_ENCRYPT_NAME} quiet splash ---'"'  > /boot/refind_linux.conf
+echo '"'Boot with logging'"'  '"'rd.luks.name={ROOT_CRYPT_UUID}={ROOT_ENCRYPT_NAME} amd_pstate=active nowatchdog amd_prefcore=enable nvidia-drm.modeset=1 root=/dev/mapper/{ROOT_ENCRYPT_NAME} ---'"'  >>  /boot/refind_linux.conf
+echo '"'Boot with safe graphics'"'  '"'rd.luks.name={ROOT_CRYPT_UUID}={ROOT_ENCRYPT_NAME} amd_pstate=active nowatchdog amd_prefcore=enable root=/dev/mapper/{ROOT_ENCRYPT_NAME} nomodeset ---'"'  >>  /boot/refind_linux.conf
 """
 
 _CRYPTTAB_ROOT_SETUP_FILE = """#!/usr/bin/bash
-echo "crypt_root	UUID={ROOT_PART_UUID}	none	luks,discard" > /etc/crypttab
+echo "{ROOT_ENCRYPT_NAME}	UUID={ROOT_PART_UUID}	none	luks,discard" > /etc/crypttab
 cat /etc/crypttab
 """
 
 _CRYPTTAB_SETUP_FILE = """#!/usr/bin/bash
-echo "crypt_home	UUID={HOME_PART_UUID}	/keyfile.txt    	luks" >> /etc/crypttab
+echo "{HOME_ENCRYPT_NAME}	UUID={HOME_PART_UUID}	/keyfile.txt    	luks" >> /etc/crypttab
 cat /etc/crypttab
 touch /keyfile.txt
 openssl genrsa > /keyfile.txt
@@ -51,7 +51,7 @@ echo 'XKBOPTIONS=""' >> /etc/default/keyboard
 echo 'BACKSPACE="guess"' >> /etc/default/keyboard
 echo 'KEYMAP={KEYBOARD}' >> /etc/default/keyboard
 cp -fv /etc/default/keyboard /etc/vconsole.conf
-echo LC_ALL={LOCALE} >> /etc/environment
+localectl set-locale LANG={LOCALE}
 timedatectl set-timezone {TIMEZONE}
 """
 
@@ -89,14 +89,19 @@ root_part_encrypt = root_part_encrypt_command.stdout.readline().decode("utf-8").
 ## Root Encryption UUID
 root_uuid_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-uuid', CHROOT_PATH], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 root_uuid_encrypt = root_uuid_encrypt_command.stdout.readline().decode("utf-8").strip()
+# Root Encryption Mapped Device
+root_name_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-name', CHROOT_PATH], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+root_name_encrypt = root_name_encrypt_command.stdout.readline().decode("utf-8").strip()
 ## Print Root info
 print("\nRoot UUID: {}".format(root_uuid))
 if root_part_encrypt == "luks_none":
     print("Root Encryption Partition: Root is not encrypted!")
     print("Root Encryption UUID: Root is not encrypted!")
+    print("Root Encryption Mapped Device Name: Root is not encrypted!")
 else:
     print("Root Encryption Partition: {}".format(root_part_encrypt))
     print("Root Encryption UUID: {}".format(root_uuid_encrypt))
+    print("Root Encryption Mapped Device Name: {}".format(root_name_encrypt))
 # Get Boot info
 ## Boot UUID
 boot_uuid_command= subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'uuid', CHROOT_PATH + "/boot"] , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -122,13 +127,18 @@ if root_uuid != home_uuid:
     ## Home Encryption UUID
     home_uuid_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-uuid', CHROOT_PATH + "/home"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     home_uuid_encrypt = home_uuid_encrypt_command.stdout.readline().decode("utf-8").strip()
+    # Root Encryption Mapped Device
+    home_name_encrypt_command = subprocess.Popen(['/usr/lib/pika/pikainstall/partition-helper.sh', 'encrypt-name', CHROOT_PATH + "/home"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    home_name_encrypt = home_name_encrypt_command.stdout.readline().decode("utf-8").strip()
     print("\nHome UUID: {}".format(home_uuid))
     if home_part_encrypt == "luks_none":
         print("Home Encryption Partition: Home is not encrypted!")
         print("Home Encryption UUID: Home is not encrypted!")
+        print("Home Encryption Mapped Device Name: Home is not encrypted!")
     else:
         print("Home Encryption Partition: {}".format(home_part_encrypt))
         print("Home Encryption UUID: {}".format(home_uuid_encrypt))
+        print("Home Encryption Mapped Device Name: {}".format(home_name_encrypt))
         if args.cryptkey is not None:
             home_passwd = args.cryptkey
         else:
@@ -188,6 +198,7 @@ if root_part_encrypt != "luks_none":
     with open(CHROOT_CRYPTTAB_ROOT_FILE_PATH, "w") as file:
         albius_crypttab_root_file = _CRYPTTAB_ROOT_SETUP_FILE.format(
             ROOT_PART_UUID=root_uuid_encrypt,
+            ROOT_ENCRYPT_NAME=root_name_encrypt,
         )
         file.write(albius_crypttab_root_file)
 
@@ -202,6 +213,7 @@ if root_uuid != home_uuid:
         with open(CHROOT_CRYPTTAB_FILE_PATH, "w") as file:
             albius_crypttab_file = _CRYPTTAB_SETUP_FILE.format(
                 HOME_PART_UUID=home_uuid_encrypt,
+                ROOT_ENCRYPT_NAME=home_name_encrypt,
                 LUKS_PASSWD=home_passwd,
             )
             file.write(albius_crypttab_file)
@@ -243,6 +255,7 @@ else:
     with open(CHROOT_REFIND_FILE_PATH, "w") as file:
         refind_crypttab_file = _REFIND_CRYPT_SETUP_FILE.format(
             ROOT_CRYPT_UUID=root_uuid_encrypt,
+            ROOT_ENCRYPT_NAME=root_name_encrypt,
         )
         file.write(refind_crypttab_file)
     

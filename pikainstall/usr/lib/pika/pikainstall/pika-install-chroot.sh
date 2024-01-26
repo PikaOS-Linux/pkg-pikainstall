@@ -32,7 +32,7 @@ apt install -y /var/cache/apt/archives/pika-refind-theme*.deb /var/cache/apt/arc
 mkdir -p /boot/efi/EFI/BOOT
 cp -vf  /boot/efi/EFI/refind/refind_x64.efi /boot/efi/EFI/BOOT/BOOTX64.EFI
 # Remove installer from installed system
-apt remove casper vanilla-installer -y || true
+apt remove casper pika-installer-gtk4 -y || true
 apt autoremove -y || true
 # Create first setup user
 useradd -m -k -U pikaos || true
