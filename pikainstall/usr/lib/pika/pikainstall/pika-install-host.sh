@@ -17,3 +17,10 @@ then
 	chmod +x /var/albius-crypttab-manual.sh
 	/var/albius-crypttab-manual.sh
 fi
+if [ -f /tmp/pika-installer-gtk4-swaplist ]
+then
+	for i in $(cat /tmp/pika-installer-gtk4-swaplist)
+	do
+		echo "UUID="$(blkid -s UUID -o value $i)" none   swap    sw      0       0" >> "$1"/etc/fstab
+	done
+fi
