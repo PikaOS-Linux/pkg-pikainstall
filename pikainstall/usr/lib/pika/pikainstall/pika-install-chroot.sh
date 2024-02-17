@@ -3,6 +3,7 @@
 # Clear fstab
 touch /etc/fstab
 # Generate fstab entries
+dpkg -s arch-install-scripts || apt install -y arch-install-scripts cryptsetup
 genfstab -U / | grep -v zram | grep -v portal | grep -v loop | grep -v cdrom > /etc/fstab
 # Remove packages that are only needed for the live session
 apt remove casper -y

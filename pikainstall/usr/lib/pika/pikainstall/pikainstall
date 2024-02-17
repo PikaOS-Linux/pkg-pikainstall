@@ -239,7 +239,7 @@ if root_uuid != home_uuid and args.manual is None :
 if args.manual is not None and args.manual[0] == "2":
     subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-crypt.txt'])
     CRYPTTAB_MANUAL_FILE_PATH = '/var/albius-crypttab-manual.sh'
-    CHROOT_CRYPTTAB_MANUAL_FILE_PATH = CHROOT_PATH+CRYPTTAB_MANUAL_FILE_PATH
+    CHROOT_CRYPTTAB_MANUAL_FILE_PATH = CRYPTTAB_MANUAL_FILE_PATH
     silentremove(CHROOT_CRYPTTAB_MANUAL_FILE_PATH)
     print("writing to:")
     print(CHROOT_CRYPTTAB_MANUAL_FILE_PATH)
