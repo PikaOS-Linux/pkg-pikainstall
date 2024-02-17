@@ -12,3 +12,8 @@ cp -rvf /cdrom/pool/main/* "$1"/var/cache/apt/archives/
 mkdir -pv "$1"/usr/lib/pika/pikainstall/
 cp -rvf /usr/lib/pika/pikainstall/pika-install-chroot.sh "$1"/usr/lib/pika/pikainstall/
 chroot "$1" /bin/bash -c "/usr/lib/pika/pikainstall/pika-install-chroot.sh"
+if [ -f /var/albius-crypttab-manual.sh ]
+then
+	chmod +x /var/albius-crypttab-manual.sh
+	/var/albius-crypttab-manual.sh
+fi

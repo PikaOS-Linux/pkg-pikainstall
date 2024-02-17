@@ -3,10 +3,10 @@
 # import libs
 import argparse
 import subprocess
-import os
+import os, errno
 
 # Version
-version="1.1.5"
+version="1.1.6"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -41,6 +41,12 @@ openssl genrsa > /keyfile.txt
 echo "{LUKS_PASSWD}" | cryptsetup luksAddKey UUID={HOME_PART_UUID}	/keyfile.txt -
 """
 
+_CRYPTTAB_MANUAL_SETUP_FILE = """#!/usr/bin/bash
+cat /tmp/pika-installer-gtk4-crypttab >> {CHROOT_PATH}/etc/crypttab
+cat {CHROOT_PATH}/etc/crypttab
+cp -rvf /key-*.txt {CHROOT_PATH}/
+"""
+
 _LANG_SETUP_FILE = """#!/usr/bin/bash
 update-locale LANG={LOCALE}
 touch /etc/default/keyboard
@@ -66,12 +72,20 @@ def listToString(s):
     # return string
     return str1
 
+def silentremove(filename):
+    try:
+        os.remove(filename)
+    except OSError as e: # this would be "except OSError, e:" before Python 2.6
+        if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+            raise # re-raise exception if a different error occurred    
+
 # Setup Command line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--root", help="The Path where root is mounted to.", metavar="/mnt/root", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-l", "--locale", help="Choose what locale/language to use.", metavar="en_US.UTF-8", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-k", "--keyboard", help="Choose what keyboard layout to use.", metavar="us", default=argparse.SUPPRESS, required=True, nargs=1)
 parser.add_argument("-c", "--cryptkey", help="Luks passkey to /home.", metavar="password123", default=None, nargs=1)
+parser.add_argument("-m", "--manual", help="Is this a manual install for gui.", metavar="0", default=None, nargs=1)
 parser.add_argument("-t", "--timezone", help="Choose what timezone to use.", metavar="America/New_York", default=argparse.SUPPRESS, required=True, nargs=1)
 args = parser.parse_args()
 
@@ -141,6 +155,8 @@ if root_uuid != home_uuid:
         print("Home Encryption Mapped Device Name: {}".format(home_name_encrypt))
         if args.cryptkey is not None:
             home_passwd = args.cryptkey
+        elif args.manual is not None:
+            home_passwd = None
         else:
             ## Ask user for Home luks partition password for the key-filing process
             print("\nPlease enter the LUKS password for the device" + home_part_encrypt + " :")
@@ -173,17 +189,17 @@ elif root_uuid != home_uuid:
 
 # With All Checks Clear and info gathered let's start installing
 
-## extract the squashfs image to root from casper
+# extract the squashfs image to root from casper
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-image.txt'])
 squashfs_cmd = ['unsquashfs', '-f', '-d', CHROOT_PATH, image]
 subprocess.run(squashfs_cmd)
 
-## Enable bls_boot on boot partiton
+# Enable bls_boot on boot partiton
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag1.txt'])
 boot_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', CHROOT_PATH + '/boot', 'bls_boot', 'on']
 subprocess.run(boot_flag_cmd)
 
-## Enable esp on EFI partiton
+# Enable esp on EFI partiton
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-flag2.txt'])
 efi_flag_cmd = ['/usr/lib/pika/pikainstall/partition-helper.sh', 'flag', CHROOT_PATH + '/boot/efi', 'esp', 'on']
 subprocess.run(efi_flag_cmd)
@@ -195,6 +211,7 @@ if root_part_encrypt != "luks_none":
     CHROOT_CRYPTTAB_ROOT_FILE_PATH = CHROOT_PATH+CRYPTTAB_ROOT_FILE_PATH
     print("writing to:")
     print(CHROOT_CRYPTTAB_ROOT_FILE_PATH)
+    silentremove(CHROOT_CRYPTTAB_ROOT_FILE_PATH)
     with open(CHROOT_CRYPTTAB_ROOT_FILE_PATH, "w") as file:
         albius_crypttab_root_file = _CRYPTTAB_ROOT_SETUP_FILE.format(
             ROOT_PART_UUID=root_uuid_encrypt,
@@ -203,11 +220,12 @@ if root_part_encrypt != "luks_none":
         file.write(albius_crypttab_root_file)
 
 # Write crypttab script if system has encryption
-if root_uuid != home_uuid:
+if root_uuid != home_uuid and args.manual is None :
     if home_part_encrypt != "luks_none":
         subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-crypt.txt'])
         CRYPTTAB_FILE_PATH = '/var/albius-crypttab.sh'
         CHROOT_CRYPTTAB_FILE_PATH = CHROOT_PATH+CRYPTTAB_FILE_PATH
+        silentremove(CHROOT_CRYPTTAB_FILE_PATH)
         print("writing to:")
         print(CHROOT_CRYPTTAB_FILE_PATH)
         with open(CHROOT_CRYPTTAB_FILE_PATH, "w") as file:
@@ -217,11 +235,26 @@ if root_uuid != home_uuid:
                 LUKS_PASSWD=home_passwd,
             )
             file.write(albius_crypttab_file)
+            
+if args.manual is not None and args.manual[0] == "2":
+    subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-crypt.txt'])
+    CRYPTTAB_MANUAL_FILE_PATH = '/var/albius-crypttab-manual.sh'
+    CHROOT_CRYPTTAB_MANUAL_FILE_PATH = CHROOT_PATH+CRYPTTAB_MANUAL_FILE_PATH
+    silentremove(CHROOT_CRYPTTAB_MANUAL_FILE_PATH)
+    print("writing to:")
+    print(CHROOT_CRYPTTAB_MANUAL_FILE_PATH)
+    with open(CHROOT_CRYPTTAB_MANUAL_FILE_PATH, "w") as file:
+        albius_crypttab_manual_file = _CRYPTTAB_MANUAL_SETUP_FILE.format(
+            CHROOT_PATH=CHROOT_PATH,
+        )
+        file.write(albius_crypttab_manual_file)
+
 
 
 # Write lang script
 LANG_FILE_PATH = '/var/albius-lang_linux.sh'
 CHROOT_LANG_FILE_PATH = CHROOT_PATH+LANG_FILE_PATH
+silentremove(CHROOT_LANG_FILE_PATH)
 print("writing to:")
 print(CHROOT_LANG_FILE_PATH)
 with open(CHROOT_LANG_FILE_PATH, "w") as file:
@@ -239,6 +272,7 @@ if root_part_encrypt == "luks_none":
     subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-boot.txt'])
     REFIND_FILE_PATH = '/var/albius-refind_linux.sh'
     CHROOT_REFIND_FILE_PATH = CHROOT_PATH+REFIND_FILE_PATH
+    silentremove(CHROOT_REFIND_FILE_PATH)
     print("writing to:")
     print(CHROOT_REFIND_FILE_PATH)
     with open(CHROOT_REFIND_FILE_PATH, "w") as file:
@@ -250,6 +284,7 @@ else:
     subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-boot.txt'])
     REFIND_FILE_PATH = '/var/albius-refind_linux.sh'
     CHROOT_REFIND_FILE_PATH = CHROOT_PATH+REFIND_FILE_PATH
+    silentremove(CHROOT_REFIND_FILE_PATH)
     print("writing to:")
     print(CHROOT_REFIND_FILE_PATH)
     with open(CHROOT_REFIND_FILE_PATH, "w") as file:
@@ -260,7 +295,7 @@ else:
         file.write(refind_crypttab_file)
     
 
-## Run pika-install-script
+# Run pika-install-script
 subprocess.run(['touch', '/tmp/pika-installer-gtk4-status-post.txt'])
 bind_dev_cmd = ['/usr/lib/pika/pikainstall/pika-install-host.sh', listToString(CHROOT_PATH)]
 subprocess.run(bind_dev_cmd)
