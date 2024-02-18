@@ -48,4 +48,5 @@ mkdir -p /home/pikaos || true
 cp -rvf /etc/skel/.* /home/pikaos/ || true
 mkdir -p /home/pikaos/.config/autostart || true
 cp /usr/share/applications/pika-first-setup.desktop /home/pikaos/.config/autostart || true
+cp /usr/share/applications/com.github.pikaos-linux.pikafirstsetup.desktop /home/pikaos/.config/autostart || true
 chown -R pikaos:pikaos /home/pikaos || true
