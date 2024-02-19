@@ -48,7 +48,7 @@ cp -rvf /key-*.txt {CHROOT_PATH}/
 """
 
 _LANG_SETUP_FILE = """#!/usr/bin/bash
-update-locale LANG={LOCALE}
+update-locale LANG={LOCALE}.UTF-8
 touch /etc/default/keyboard
 echo 'XKBMODEL="pc105"' > /etc/default/keyboard
 echo 'XKBLAYOUT="{KEYBOARD}"' >> /etc/default/keyboard
