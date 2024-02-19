@@ -38,7 +38,7 @@ echo "{HOME_ENCRYPT_NAME}	UUID={HOME_PART_UUID}	/keyfile.txt    	luks" >> /etc/c
 cat /etc/crypttab
 touch /keyfile.txt
 openssl genrsa > /keyfile.txt
-echo "{LUKS_PASSWD}" | cryptsetup luksAddKey UUID={HOME_PART_UUID}	/keyfile.txt -
+echo '{LUKS_PASSWD}' | cryptsetup luksAddKey UUID={HOME_PART_UUID}	/keyfile.txt -
 """
 
 _CRYPTTAB_MANUAL_SETUP_FILE = """#!/usr/bin/bash
