@@ -149,12 +149,15 @@ if root_uuid != home_uuid:
         print("Home Encryption Partition: Home is not encrypted!")
         print("Home Encryption UUID: Home is not encrypted!")
         print("Home Encryption Mapped Device Name: Home is not encrypted!")
+        home_passwd = None
     else:
         print("Home Encryption Partition: {}".format(home_part_encrypt))
         print("Home Encryption UUID: {}".format(home_uuid_encrypt))
         print("Home Encryption Mapped Device Name: {}".format(home_name_encrypt))
         if args.cryptkey is not None:
             home_passwd = args.cryptkey[0]
+        elif args.manual is not None:
+            home_passwd = None
         else:
             ## Ask user for Home luks partition password for the key-filing process
             print("\nPlease enter the LUKS password for the device" + home_part_encrypt + " :")
