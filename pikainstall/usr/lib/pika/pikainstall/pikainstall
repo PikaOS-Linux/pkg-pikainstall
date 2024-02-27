@@ -48,7 +48,7 @@ cp -rvf /key-*.txt {CHROOT_PATH}/
 """
 
 _LANG_SETUP_FILE = """#!/usr/bin/bash
-cp -vf /usr/share/i18n/SUPPORTED /etc/locale.gen
+echo '{LOCALE} UTF-8' >> /etc/locale.gen
 locale-gen
 update-locale LANG={LOCALE}
 touch /etc/default/keyboard
