@@ -6,7 +6,7 @@ import subprocess
 import os, errno
 
 # Version
-version="1.1.6"
+version="1.1.7"
 dist="PikaOS 3"
 image="/cdrom/casper/filesystem.squashfs"
 
@@ -48,7 +48,7 @@ cp -rvf /key-*.txt {CHROOT_PATH}/
 """
 
 _LANG_SETUP_FILE = """#!/usr/bin/bash
-update-locale LANG={LOCALE}.UTF-8
+update-locale LANG={LOCALE}
 touch /etc/default/keyboard
 echo 'XKBMODEL="pc105"' > /etc/default/keyboard
 echo 'XKBLAYOUT="{KEYBOARD}"' >> /etc/default/keyboard
@@ -57,7 +57,7 @@ echo 'XKBOPTIONS=""' >> /etc/default/keyboard
 echo 'BACKSPACE="guess"' >> /etc/default/keyboard
 echo 'KEYMAP={KEYBOARD}' >> /etc/default/keyboard
 cp -fv /etc/default/keyboard /etc/vconsole.conf
-localectl set-locale LANG={LOCALE}.UTF-8
+localectl set-locale LANG={LOCALE}
 timedatectl set-timezone {TIMEZONE}
 """
 
